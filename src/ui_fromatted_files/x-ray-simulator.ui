@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>XRaySimulator_Ui</class>
+ <widget class="QMainWindow" name="XRaySimulator_Ui">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -9,6 +9,12 @@
     <width>618</width>
     <height>878</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
@@ -19,30 +25,39 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>878</height>
+    <height>16777215</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>XRaySimulator_Ui</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="central_widget_vlayout">
-    <property name="leftMargin">
-     <number>9</number>
-    </property>
-    <property name="topMargin">
-     <number>0</number>
-    </property>
     <item>
      <widget class="QLabel" name="warning_label">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="maximumSize">
        <size>
         <width>16777215</width>
         <height>30</height>
        </size>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel{
+background-color: #F94944;
+color: white;
+}</string>
+      </property>
       <property name="text">
-       <string>Warning: Simulation parameters changed, re-click the evaluation quality button.</string>
+       <string>[Warning] ROI changed! Please click 'Evaluate Metrics' again.</string>
+      </property>
+      <property name="indent">
+       <number>4</number>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByMouse</set>
       </property>
      </widget>
     </item>
@@ -81,17 +96,45 @@
            <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
           <layout class="QGridLayout" name="image_simulator_groupbox_gridlayout">
+           <item row="2" column="0">
+            <widget class="QLabel" name="mAs_label_2">
+             <property name="text">
+              <string>Contrast</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="kVp_label">
              <property name="text">
-              <string>kVp</string>
+              <string>Noise</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="mAs_label">
              <property name="text">
-              <string>mAs</string>
+              <string>Blur</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSlider" name="horizontalSlider">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSlider" name="horizontalSlider_2">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSlider" name="horizontalSlider_3">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
             </widget>
            </item>
@@ -99,7 +142,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="evaluate_quality_btn_2">
+         <widget class="QPushButton" name="simulate_parameters_btn">
           <property name="text">
            <string>Simulate parameters</string>
           </property>
@@ -216,11 +259,16 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionRectangle_ROI"/>
+   <addaction name="separator"/>
+   <addaction name="actionReset"/>
   </widget>
   <action name="actionRectangle_ROI">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/Icons/assets/icons/rectangle_roi.png</normaloff>:/Icons/assets/icons/rectangle_roi.png</iconset>
+     <normaloff>:/Icons/testing_environment/assets/icons/rectangle_roi.png</normaloff>:/Icons/testing_environment/assets/icons/rectangle_roi.png</iconset>
    </property>
    <property name="text">
     <string>Rectangle_ROI</string>
@@ -257,6 +305,27 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/Icons/testing_environment/assets/icons/reset.png</normaloff>:/Icons/testing_environment/assets/icons/reset.png</iconset>
+   </property>
+   <property name="text">
+    <string>Reset</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete the ROI and reset the image. Shortcut is ctrl+Shift+R</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+R</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

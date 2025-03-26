@@ -2,7 +2,7 @@ import sys
 
 from PyQt6.QtWidgets import QApplication
 
-from x_ray_simulator_backend import XRaySimulator_Backend
+from backend import XRaySimulator_Backend
 
 
 def main():
