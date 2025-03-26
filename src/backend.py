@@ -257,7 +257,7 @@ class XRaySimulator_Backend(QMainWindow):
         self.imported_image = sim.adjust_contrast(
             image=self.imported_image,
             contrast_factor=self.contrast_factor,
-            contrast_method=self.contrast_method,
+            method=self.contrast_method,
         )
 
         # Enable the reset button

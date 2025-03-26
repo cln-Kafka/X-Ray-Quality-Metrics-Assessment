@@ -172,6 +172,21 @@ class XRaySimulator_Ui(object):
         )
 
         self.image_simulator_section_vlayout.addWidget(self.image_simulator_groupBox)
+
+        self.simulate_changes_btn = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.simulate_changes_btn.setObjectName("simulate_changes_btn")
+        self.simulate_changes_btn.setEnabled(False)
+        self.simulate_changes_btn.setStyleSheet(
+            """
+            QPushButton:enabled {
+                background-color: #01a28e; /* Enabled background color */
+                color: white; /* Enabled text color */
+                font-weight: bold;
+            }
+            """
+        )
+        self.image_simulator_section_vlayout.addWidget(self.simulate_changes_btn)
+
         self.controls_hlayout.addLayout(self.image_simulator_section_vlayout)
         self.metrics_section_vlayout = QtWidgets.QVBoxLayout()
         self.metrics_section_vlayout.setObjectName("metrics_section_vlayout")
@@ -327,6 +342,9 @@ class XRaySimulator_Ui(object):
         )
         self.contrast_factor_label.setText(
             _translate("XRaySimulator_Ui", "Contrast Factor")
+        )
+        self.simulate_changes_btn.setText(
+            _translate("XRaySimulator_Ui", "Simulate Changes")
         )
         self.quality_metrics_groupBox.setTitle(
             _translate("XRaySimulator_Ui", "Quality Metrics")

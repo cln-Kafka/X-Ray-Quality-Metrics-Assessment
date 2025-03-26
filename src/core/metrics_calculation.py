@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 
 
@@ -28,11 +29,23 @@ def compute_roi_cnr(signal_roi, background_pixels):
 
 def compute_roi_resolution(signal_roi):
     """
-    Compute a global measure of spatial resolution via Fourier analysis on the signal ROI.
-    A sharper image tends to have more high-frequency content.
-    Here we use the mean magnitude of the shifted Fourier spectrum as a rough indicator.
+    Compute spatial resolution using edge detection and frequency analysis.
+    This method uses the Edge Spread Function (ESF) and estimates resolution based on frequency content.
     """
-    fft_image = np.fft.fft2(signal_roi)
-    fft_shifted = np.fft.fftshift(fft_image)
-    magnitude_spectrum = np.abs(fft_shifted)
-    return np.mean(magnitude_spectrum)
+    # Apply Sobel filter to detect edges
+    edges = cv2.Sobel(signal_roi, cv2.CV_64F, 1, 0, ksize=5)
+
+    # Convert to 1D edge profile by summing along columns
+    edge_profile = np.mean(edges, axis=0)
+
+    # Compute Line Spread Function (LSF) using the derivative of ESF
+    lsf = np.gradient(edge_profile)
+
+    # Find peak frequencies in the LSF (higher frequencies -> better resolution)
+    fft_lsf = np.fft.fft(lsf)
+    fft_freqs = np.fft.fftfreq(len(lsf))
+
+    # Find the highest frequency component
+    resolution_frequency = np.max(np.abs(fft_lsf))
+
+    return resolution_frequency
