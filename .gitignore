@@ -1,3 +1,7 @@
+# A virtual environment for quick testing
+testing_environment/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
