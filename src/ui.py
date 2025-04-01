@@ -6,13 +6,13 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 class XRaySimulator_Ui(object):
     def setupUi(self, XRaySimulator_mainwindow: QtWidgets.QMainWindow):
         XRaySimulator_mainwindow.setObjectName("XRaySimulator_Ui")
-        XRaySimulator_mainwindow.setFixedSize(618, 878)
+        XRaySimulator_mainwindow.setFixedSize(618, 890)
         XRaySimulator_mainwindow.setWindowIcon(
             QtGui.QIcon("assets/icons/x-ray-simulator-app-icon.png")
         )
         # Apply custom styles
         custom_stylesheet = """
-        QSpinBox, QComboBox, QDoubleSpinBox {
+        QSpinBox, QComboBox, QDoubleSpinBox, QSlider {
             selection-background-color: #01a28e; /* Change highlight color */
         }
         """
@@ -60,10 +60,10 @@ class XRaySimulator_Ui(object):
         )
 
         ##### =========== Labels =========== #####
-        self.noise_level_label = QtWidgets.QLabel(parent=self.image_simulator_groupBox)
-        self.noise_level_label.setObjectName("noise_label")
+        self.mA_value_label = QtWidgets.QLabel(parent=self.image_simulator_groupBox)
+        self.mA_value_label.setObjectName("mA_value_label")
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.noise_level_label, 0, 0, 1, 1
+            self.mA_value_label, 0, 0, 1, 1
         )
 
         self.noise_type_label = QtWidgets.QLabel(parent=self.image_simulator_groupBox)
@@ -72,45 +72,37 @@ class XRaySimulator_Ui(object):
             self.noise_type_label, 0, 2, 1, 1
         )
 
-        self.blur_sigma_x_label = QtWidgets.QLabel(parent=self.image_simulator_groupBox)
-        self.blur_sigma_x_label.setObjectName("blur_sigma_x_label")
+        self.kVp_value_label = QtWidgets.QLabel(parent=self.image_simulator_groupBox)
+        self.kVp_value_label.setObjectName("kVp_value_label")
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.blur_sigma_x_label, 1, 0, 1, 1
+            self.kVp_value_label, 1, 0, 1, 1
         )
 
-        self.blur_sigma_y_label = QtWidgets.QLabel(parent=self.image_simulator_groupBox)
-        self.blur_sigma_y_label.setObjectName("blur_sigma_y_label")
-        self.image_simulator_groupbox_gridlayout.addWidget(
-            self.blur_sigma_y_label, 1, 2, 1, 1
-        )
-
-        self.contrast_factor_label = QtWidgets.QLabel(
+        self.motion_blur_kernel_size_label = QtWidgets.QLabel(
             parent=self.image_simulator_groupBox
         )
-        self.contrast_factor_label.setObjectName("contrast_factor_label")
+        self.motion_blur_kernel_size_label.setObjectName("motion_blur_kernel_size")
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.contrast_factor_label, 2, 0, 1, 1
+            self.motion_blur_kernel_size_label, 1, 2, 1, 1
         )
 
-        self.contrast_method_label = QtWidgets.QLabel(
+        self.motion_blur_angle_label = QtWidgets.QLabel(
             parent=self.image_simulator_groupBox
         )
-        self.contrast_method_label.setObjectName("contrast_method_label")
+        self.motion_blur_angle_label.setObjectName("method_blur_angle_label")
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.contrast_method_label, 2, 2, 1, 1
+            self.motion_blur_angle_label, 2, 0, 1, 1
         )
 
         ##### =========== Spinboxes and Comboboxes =========== #####
-        self.noise_level_spinbox = QtWidgets.QDoubleSpinBox(
-            parent=self.image_simulator_groupBox
-        )
-        self.noise_level_spinbox.setObjectName("noise_level_spinbox")
-        self.noise_level_spinbox.setValue(0)
-        self.noise_level_spinbox.setMinimum(0)
-        self.noise_level_spinbox.setMaximum(1)
-        self.noise_level_spinbox.setSingleStep(0.01)
+        self.mA_value_spinbox = QtWidgets.QSpinBox(parent=self.image_simulator_groupBox)
+        self.mA_value_spinbox.setObjectName("mA_value_spinbox")
+        self.mA_value_spinbox.setValue(200)
+        self.mA_value_spinbox.setMinimum(10)
+        self.mA_value_spinbox.setMaximum(600)
+        self.mA_value_spinbox.setSingleStep(1)
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.noise_level_spinbox, 0, 1, 1, 1
+            self.mA_value_spinbox, 0, 1, 1, 1
         )
 
         self.noise_type_combobox = QtWidgets.QComboBox(
@@ -124,51 +116,62 @@ class XRaySimulator_Ui(object):
             self.noise_type_combobox, 0, 3, 1, 1
         )
 
-        self.blur_sigma_x_spinbox = QtWidgets.QSpinBox(
+        self.kVp_value_spinbox = QtWidgets.QSpinBox(
             parent=self.image_simulator_groupBox
         )
-        self.blur_sigma_x_spinbox.setObjectName("blur_sigma_x_spinbox")
-        self.blur_sigma_x_spinbox.setValue(0)
-        self.blur_sigma_x_spinbox.setMinimum(0)
-        self.blur_sigma_x_spinbox.setMaximum(10)
-        self.blur_sigma_x_spinbox.setSingleStep(1)
+        self.kVp_value_spinbox.setObjectName("kVp_value_spinbox")
+        self.kVp_value_spinbox.setValue(40)
+        self.kVp_value_spinbox.setMinimum(5)
+        self.kVp_value_spinbox.setMaximum(200)
+        self.kVp_value_spinbox.setSingleStep(1)
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.blur_sigma_x_spinbox, 1, 1, 1, 1
+            self.kVp_value_spinbox, 1, 1, 1, 1
         )
 
-        self.blur_sigma_y_spinbox = QtWidgets.QSpinBox(
+        self.motion_blur_kernel_size_slider = QtWidgets.QSlider(
             parent=self.image_simulator_groupBox
         )
-        self.blur_sigma_y_spinbox.setObjectName("blur_sigma_y_spinbox")
-        self.blur_sigma_y_spinbox.setValue(0)
-        self.blur_sigma_y_spinbox.setMinimum(0)
-        self.blur_sigma_y_spinbox.setMaximum(10)
-        self.blur_sigma_y_spinbox.setSingleStep(1)
+        self.motion_blur_kernel_size_slider.setOrientation(
+            QtCore.Qt.Orientation.Horizontal
+        )
+        self.motion_blur_kernel_size_slider.setObjectName(
+            "motion_blur_kernel_size_slider"
+        )
+        self.motion_blur_kernel_size_slider.setValue(15)
+        self.motion_blur_kernel_size_slider.setMinimum(3)
+        self.motion_blur_kernel_size_slider.setMaximum(30)
+        self.motion_blur_kernel_size_slider.setSingleStep(2)
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.blur_sigma_y_spinbox, 1, 3, 1, 1
+            self.motion_blur_kernel_size_slider, 1, 3, 1, 1
         )
 
-        self.contrast_factor_spinbox = QtWidgets.QDoubleSpinBox(
+        self.motion_blur_angle_slider = QtWidgets.QSpinBox(
             parent=self.image_simulator_groupBox
         )
-        self.contrast_factor_spinbox.setObjectName("contrast_factor_spinbox")
-        self.contrast_factor_spinbox.setValue(0)
-        self.contrast_factor_spinbox.setMinimum(0)
-        self.contrast_factor_spinbox.setMaximum(1.5)
-        self.contrast_factor_spinbox.setSingleStep(0.01)
+        self.motion_blur_angle_slider.setObjectName("motion_blur_angle_slider")
+        self.motion_blur_angle_slider.setValue(0)
+        self.motion_blur_angle_slider.setMinimum(0)
+        self.motion_blur_angle_slider.setMaximum(360)
+        self.motion_blur_angle_slider.setSingleStep(5)
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.contrast_factor_spinbox, 2, 1, 1, 1
+            self.motion_blur_angle_slider, 2, 1, 1, 1
         )
 
-        self.contrast_method_combobox = QtWidgets.QComboBox(
-            parent=self.image_simulator_groupBox
-        )
-        self.contrast_method_combobox.setObjectName("contrast_method_combobox")
-        self.contrast_method_combobox.addItem("Gamma")
-        self.contrast_method_combobox.addItem("Linear")
-        self.contrast_method_combobox.setCurrentIndex(0)
+        # Checkboxes
+        self.noise_checkbox = QtWidgets.QCheckBox("Noise")
+        self.noise_checkbox.setChecked(False)
         self.image_simulator_groupbox_gridlayout.addWidget(
-            self.contrast_method_combobox, 2, 3, 1, 1
+            self.noise_checkbox, 3, 0, 1, 1
+        )
+        self.contrast_checkbox = QtWidgets.QCheckBox("Contrast")
+        self.contrast_checkbox.setChecked(False)
+        self.image_simulator_groupbox_gridlayout.addWidget(
+            self.contrast_checkbox, 3, 1, 1, 1
+        )
+        self.motion_blur_checkbox = QtWidgets.QCheckBox("Motion Blur")
+        self.motion_blur_checkbox.setChecked(False)
+        self.image_simulator_groupbox_gridlayout.addWidget(
+            self.motion_blur_checkbox, 3, 2, 1, 2
         )
 
         self.image_simulator_section_vlayout.addWidget(self.image_simulator_groupBox)
@@ -280,6 +283,8 @@ class XRaySimulator_Ui(object):
         self.actionRectangle_ROI.setObjectName("actionRectangle_ROI")
         self.actionImport_Image = QtGui.QAction(parent=XRaySimulator_mainwindow)
         self.actionImport_Image.setObjectName("actionImport_Image")
+        self.actionSave_Image = QtGui.QAction(parent=XRaySimulator_mainwindow)
+        self.actionSave_Image.setObjectName("actionSave_Image")
         self.actionSynthesize_Image = QtGui.QAction(parent=XRaySimulator_mainwindow)
         self.actionSynthesize_Image.setObjectName("actionSynthesize_Image")
         self.actionExit = QtGui.QAction(parent=XRaySimulator_mainwindow)
@@ -298,6 +303,7 @@ class XRaySimulator_Ui(object):
         self.actionReset.setMenuRole(QtGui.QAction.MenuRole.NoRole)
         self.actionReset.setObjectName("actionReset")
         self.menuFile.addAction(self.actionImport_Image)
+        self.menuFile.addAction(self.actionSave_Image)
         self.menuFile.addAction(self.actionSynthesize_Image)
         self.menuFile.addAction(self.actionExit)
         self.menuHelp.addAction(self.actionDocumentation)
@@ -333,16 +339,17 @@ class XRaySimulator_Ui(object):
         self.image_simulator_groupBox.setTitle(
             _translate("XRaySimulator_Ui", "Image Simulator")
         )
-        self.noise_level_label.setText(_translate("XRaySimulator_Ui", "Noise Level"))
+
+        self.mA_value_label.setText(_translate("XRaySimulator_Ui", "mA value"))
+
         self.noise_type_label.setText(_translate("XRaySimulator_Ui", "Noise Type"))
-        self.blur_sigma_x_label.setText(_translate("XRaySimulator_Ui", "Blur Sigma X"))
-        self.blur_sigma_y_label.setText(_translate("XRaySimulator_Ui", "Blur Sigma Y"))
-        self.contrast_method_label.setText(
-            _translate("XRaySimulator_Ui", "Contrast Method")
+        self.motion_blur_kernel_size_label.setText(
+            _translate("XRaySimulator_Ui", "Motion Blur Kernel: 15")
         )
-        self.contrast_factor_label.setText(
-            _translate("XRaySimulator_Ui", "Contrast Factor")
+        self.motion_blur_angle_label.setText(
+            _translate("XRaySimulator_Ui", "Motion Blur Angle")
         )
+        self.kVp_value_label.setText(_translate("XRaySimulator_Ui", "kVp value"))
         self.simulate_changes_btn.setText(
             _translate("XRaySimulator_Ui", "Simulate Changes")
         )
@@ -377,6 +384,8 @@ class XRaySimulator_Ui(object):
         self.actionRectangle_ROI.setShortcut(_translate("XRaySimulator_Ui", "Ctrl+R"))
         self.actionImport_Image.setText(_translate("XRaySimulator_Ui", "Import Image"))
         self.actionImport_Image.setShortcut(_translate("XRaySimulator_Ui", "Ctrl+I"))
+        self.actionSave_Image.setText(_translate("XRaySimulator_Ui", "Save Image"))
+        self.actionSave_Image.setShortcut(_translate("XRaySimulator_Ui", "Ctrl+S"))
         self.actionSynthesize_Image.setText(
             _translate("XRaySimulator_Ui", "Synthesize Image")
         )

@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QFileDialog, QMainWindow
 import cv2
+from matplotlib import pyplot as plt
 import numpy as np
 from ui import XRaySimulator_Ui
 import webbrowser
@@ -21,16 +22,21 @@ class XRaySimulator_Backend(QMainWindow):
         self.spatial_resolution = 0
         # Image
         self.file_path = None
-        self.imported_image = None
+        self.original_image = None
+        self.normalized_image = None
+        self.current_image = None
         self.rectangular_roi_image = None
         self.background_roi_image = None
         # Simulation Parameters
-        self.noise_value = 0
+        self.mA_value = 200
         self.noise_type = "poisson"
-        self.blur_sigma_x = 0
-        self.blur_sigma_y = 0
-        self.contrast_factor = 0
-        self.contrast_method = "gamma"
+        self.kVp_value = 100
+        self.motion_blur_angle = 0
+        self.motion_blur_kernel_size = 15
+        self.high_pass_filter_radius = 30
+        # Constants
+        self.ref_mA = 200
+        self.ref_kVp = 100
 
         # Initialize UI connections
         self.init_UI_connections()
@@ -38,22 +44,18 @@ class XRaySimulator_Backend(QMainWindow):
     def init_UI_connections(self):
         # Menus
         self.ui.actionImport_Image.triggered.connect(self.import_image)
+        self.ui.actionSave_Image.triggered.connect(self.save_simulated_image)
         self.ui.actionSynthesize_Image.triggered.connect(self.synthesize_image)
         self.ui.actionExit.triggered.connect(self.close)
         self.ui.actionDocumentation.triggered.connect(self.open_documentation)
         # Controls
         self.ui.evaluate_quality_btn.clicked.connect(self.evaluate_quality)
-        # self.ui.simulate_parameters_btn.clicked.connect(self.simulate_parameters)
+        self.ui.simulate_changes_btn.clicked.connect(self.simulate_changes)
         self.ui.actionRectangle_ROI.triggered.connect(self.draw_rectangle_roi)
         self.ui.actionReset.triggered.connect(self.reset)
-        # Spinboxes and Comboboxes
-        self.ui.noise_level_spinbox.valueChanged.connect(self.add_noise)
-        self.ui.noise_type_combobox.currentIndexChanged.connect(self.add_noise)
-        self.ui.blur_sigma_x_spinbox.valueChanged.connect(self.add_blur)
-        self.ui.blur_sigma_y_spinbox.valueChanged.connect(self.add_blur)
-        self.ui.contrast_factor_spinbox.valueChanged.connect(self.adjust_contrast)
-        self.ui.contrast_method_combobox.currentIndexChanged.connect(
-            self.adjust_contrast
+        # Sliders
+        self.ui.motion_blur_kernel_size_slider.valueChanged.connect(
+            self.update_motion_kernel_label
         )
 
     def import_image(self):
@@ -67,27 +69,29 @@ class XRaySimulator_Backend(QMainWindow):
 
         if self.file_path and isinstance(self.file_path, str):
             # Read the matrix, convert to rgb
-            self.imported_image = cv2.imread(self.file_path, 1)
-            if self.imported_image is not None:
+            self.original_image = cv2.imread(self.file_path, cv2.IMREAD_GRAYSCALE)
+
+            if self.original_image is not None:
                 self.enable_controls(enabled=True)
                 self.preprocess_imported_image()
 
-    def enable_controls(self, enabled=True):
-        self.ui.toolBar.setEnabled(enabled)
-        self.ui.evaluate_quality_btn.setEnabled(enabled)
-        self.ui.quality_metrics_groupBox.setEnabled(enabled)
-        self.ui.image_simulator_groupBox.setEnabled(enabled)
-
     def preprocess_imported_image(self):
-        # Convert the image to RGB format
-        self.imported_image = cv2.cvtColor(self.imported_image, cv2.COLOR_BGR2RGB)
+        """
+        Normalize the image to the range [0, 1] and display it.
+        """
+        # Ensure the image is in float32 format for proper normalization
+        self.original_image = self.original_image.astype(np.float32)
 
         # Normalize the image to the range [0, 1]
-        self.imported_image = exposure.rescale_intensity(
-            self.imported_image, out_range=(0, 1)
+        self.normalized_image = cv2.normalize(
+            self.original_image, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX
         )
+
+        # Update the current image to the normalized image
+        self.current_image = self.normalized_image
+
         # Display the image
-        self.display_image(self.imported_image)
+        self.display_image(self.current_image)
 
     def display_image(self, image):
         """
@@ -100,7 +104,7 @@ class XRaySimulator_Backend(QMainWindow):
         self.ui.image_display_figure_canvas.figure.clear()
         ax = self.ui.image_display_figure_canvas.figure.add_subplot(111)
 
-        ax.imshow(image)  # Display the image
+        ax.imshow(image, cmap="gray")  # Display the image
         ax.axis("off")
         ax.set_title("Imported X-Ray Image")
 
@@ -112,7 +116,6 @@ class XRaySimulator_Backend(QMainWindow):
         # Ensure the updated image is shown
         self.ui.image_display_figure_canvas.draw()
 
-    # Callback function to capture ROI coordinates
     def on_select_rect_roi(self, eclick, erelease):
         x_min, x_max = int(eclick.xdata), int(erelease.xdata)
         y_min, y_max = int(eclick.ydata), int(erelease.ydata)
@@ -122,10 +125,10 @@ class XRaySimulator_Backend(QMainWindow):
         y_min, y_max = sorted((y_min, y_max))
 
         # Extract and save the ROI
-        self.rectangular_roi_image = self.imported_image[y_min:y_max, x_min:x_max]
+        self.rectangular_roi_image = self.current_image[y_min:y_max, x_min:x_max]
 
         # Create a mask of the same size as the imported image
-        self.background_roi_image = self.imported_image.copy()
+        self.background_roi_image = self.current_image.copy()
         self.background_roi_image[y_min:y_max, x_min:x_max] = 0
 
         # Show the warning label to inform the user
@@ -144,7 +147,7 @@ class XRaySimulator_Backend(QMainWindow):
             - Only enables drawing if the actionRectangle_ROI button is checked.
             - Re-enables interaction with the existing ROI if it was previously drawn.
         """
-        if self.imported_image is None:
+        if self.original_image is None:
             return
 
         if self.ui.actionRectangle_ROI.isChecked():
@@ -201,74 +204,62 @@ class XRaySimulator_Backend(QMainWindow):
 
         self.ui.warning_label.hide()
 
-    def add_noise(self):
-        if self.imported_image is None:
-            return
+    def simulate_changes(self):
+        # Get simulation parameters from UI
+        self.mA_value = self.ui.mA_value_spinbox.value()
+        self.noise_type_new = self.ui.noise_type_combobox.currentText().lower()
+        self.kVp_value = self.ui.kVp_value_spinbox.value()
+        self.motion_blur_angle = self.ui.motion_blur_angle_slider.value()
+        self.motion_blur_kernel_size = self.ui.motion_blur_kernel_size_slider.value()
 
-        self.noise_value = self.ui.noise_level_spinbox.value()
-        self.noise_type = self.ui.noise_type_combobox.currentText().lower()
+        # Make a copy of the normalized image to modify
+        simulated_image = (self.normalized_image * 255).astype(np.uint8)
 
-        self.imported_image = sim.add_noise(
-            image=self.imported_image,
-            noise_level=self.noise_value,
-            noise_type=self.noise_type,
-        )
+        # Derive noise level from mA: lower mA yields higher noise variance
+        noise_std = 0.1 * np.sqrt(self.ref_mA / self.mA_value)
 
-        # Enable the reset button
+        # Derive contrast factor from kVp: lower kVp increases contrast.
+        contrast_factor = self.ref_kVp / self.kVp_value
+
+        # Apply noise
+        if self.ui.noise_checkbox.isChecked():
+            simulated_image = sim.add_noise(
+                simulated_image,
+                noise_type=self.noise_type_new,
+                noise_factor=noise_std,
+            )
+
+        # Apply contrast adjustment
+        if self.ui.contrast_checkbox.isChecked():
+            simulated_image = sim.adjust_contrast(
+                simulated_image, factor=contrast_factor
+            )
+
+        # Apply motion blur
+        if self.ui.motion_blur_checkbox.isChecked():
+            simulated_image = sim.add_motion_blur(
+                simulated_image,
+                kernel_size=self.motion_blur_kernel_size,
+                angle=self.motion_blur_angle,
+            )
+
+        # Normalize back to [0, 1] for display
+        simulated_image = simulated_image.astype(np.float32) / 255.0
+
+        # Update the current image to the simulated image
+        self.current_image = simulated_image
+
+        # Enable the save and reset buttons
+        self.ui.actionSave_Image.setEnabled(True)
         self.ui.actionReset.setEnabled(True)
         # Show the warning
         self.ui.warning_label.setText(
-            "[Warning] Noise added! Please click 'Evaluate Metrics' again."
+            "[Warning] Image's parameters were modified! Please click 'Evaluate Metrics' again."
         )
         self.ui.warning_label.show()
 
-        self.display_image(self.imported_image)
-
-    def add_blur(self):
-        if self.imported_image is None:
-            return
-
-        self.blur_sigma_x = self.ui.blur_sigma_x_spinbox.value()
-        self.blur_sigma_y = self.ui.blur_sigma_y_spinbox.value()
-
-        self.imported_image = sim.apply_gaussian_blur(
-            image=self.imported_image,
-            blur_sigma_x=self.blur_sigma_x,
-            blur_sigma_y=self.blur_sigma_y,
-        )
-
-        # Enable the reset button
-        self.ui.actionReset.setEnabled(True)
-        # Show the warning
-        self.ui.warning_label.setText(
-            "[Warning] Image blurred! Please click 'Evaluate Metrics' again."
-        )
-        self.ui.warning_label.show()
-
-        self.display_image(self.imported_image)
-
-    def adjust_contrast(self):
-        if self.imported_image is None:
-            return
-
-        self.contrast_factor = self.ui.contrast_factor_spinbox.value()
-        self.contrast_method = self.ui.contrast_method_combobox.currentText().lower()
-
-        self.imported_image = sim.adjust_contrast(
-            image=self.imported_image,
-            contrast_factor=self.contrast_factor,
-            method=self.contrast_method,
-        )
-
-        # Enable the reset button
-        self.ui.actionReset.setEnabled(True)
-        # Show the warning
-        self.ui.warning_label.setText(
-            "[Warning] Image's contrast was modified! Please click 'Evaluate Metrics' again."
-        )
-        self.ui.warning_label.show()
-
-        self.display_image(self.imported_image)
+        # Display the simulated image
+        self.display_image(self.current_image)
 
     def reset(self):
         """
@@ -295,15 +286,14 @@ class XRaySimulator_Backend(QMainWindow):
         self.ui.cnr_value_label.setText("0.00")
         self.ui.snr_value_label.setText("0.00")
         self.ui.spatial_resolution_value_label.setText("0.00")
-        self.ui.noise_level_spinbox.setValue(0)
+        self.ui.mA_value_spinbox.setValue(200)
         self.ui.noise_type_combobox.setCurrentIndex(0)
-        self.ui.blur_sigma_x_spinbox.setValue(0)
-        self.ui.blur_sigma_y_spinbox.setValue(0)
-        self.ui.contrast_factor_spinbox.setValue(0)
-        self.ui.contrast_method_combobox.setCurrentIndex(0)
+        self.ui.motion_blur_angle_slider.setValue(0)
+        self.ui.motion_blur_kernel_size_slider.setValue(15)
+        self.ui.kVp_value_spinbox.setValue(100)
 
         # Reimport and display the original image from self.file_path
-        self.imported_image = cv2.imread(self.file_path, 1)
+        self.original_image = cv2.imread(self.file_path, 1)
         self.preprocess_imported_image()
 
         # Hide the warning label
@@ -317,10 +307,58 @@ class XRaySimulator_Backend(QMainWindow):
         phantom[80:150, 80:150] = 0.5  # Soft tissue
         phantom[100:130, 100:130] = 1.0  # Bone
 
-        self.display_image(phantom)
+        self.current_image = phantom
+        self.enable_controls(True)
+
+        self.display_image(self.current_image)
+
+    def enable_controls(self, enabled=True):
+        self.ui.toolBar.setEnabled(enabled)
+        self.ui.evaluate_quality_btn.setEnabled(enabled)
+        self.ui.quality_metrics_groupBox.setEnabled(enabled)
+        self.ui.image_simulator_groupBox.setEnabled(enabled)
+        self.ui.simulate_changes_btn.setEnabled(enabled)
+
+    def update_motion_kernel_label(self):
+        self.motion_blur_kernel_size = self.ui.motion_blur_kernel_size_slider.value()
+        self.ui.motion_blur_kernel_size_label.setText(
+            f"Motion Blur Kernel: {self.motion_blur_kernel_size}"
+        )
 
     def close(self):
         return super().close()
 
     def open_documentation(self):
         webbrowser.open("https://github.com/cln-Kafka/X-Ray-Task/blob/main/README.md")
+
+    def save_simulated_image(self):
+        """
+        Open a file dialog to save the currently simulated image.
+        """
+        if self.current_image is None:
+            return
+
+        # Convert the image to uint8 for saving
+        save_image = (self.current_image * 255).astype(np.uint8)
+
+        # Open file dialog to choose save location
+        save_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Simulated Image",
+            "simulated_image.png",
+            "Image Files (*.png *.jpg *.jpeg *.bmp)",
+        )
+
+        if save_path:
+            try:
+                # Save the image
+                cv2.imwrite(save_path, save_image)
+                # Optionally, show a success message
+                self.ui.warning_label.setText(
+                    f"Image saved successfully at {save_path}"
+                )
+                self.ui.warning_label.show()
+            except Exception as e:
+                # Show error message if saving fails
+                self.ui.warning_label.setText(f"Error saving image: {str(e)}")
+                self.ui.warning_label.show()

@@ -20,11 +20,14 @@ def compute_roi_cnr(signal_roi, background_pixels):
     mean_signal = np.mean(signal_roi)
     mean_background = np.mean(background_pixels)
     std_background = np.std(background_pixels)
-    return (
-        (mean_signal - mean_background) / std_background
+
+    cnr_value = (
+        abs(mean_signal - mean_background) / std_background
         if std_background != 0
         else np.nan
     )
+
+    return cnr_value
 
 
 def compute_roi_resolution(signal_roi):

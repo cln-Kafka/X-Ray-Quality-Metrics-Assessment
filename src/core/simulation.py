@@ -1,28 +1,43 @@
 import numpy as np
 import cv2
 
-from core.metrics_calculation import (
-    compute_roi_cnr,
-    compute_roi_resolution,
-    compute_roi_snr,
-)
 
-
-def add_noise(image, noise_type="poisson"):
+def add_noise(image, noise_type="poisson", noise_factor=0.1):
     """
-    Simulate noise due to reduced dose or low kVp. Lower dose means more noise (Poisson/Gaussian)
-    - "poisson" simulates quantum noise (low-dose X-rays).
-    - "gaussian" simulates electronic noise.
+    Add noise to an image in grayscale
+    Returns: (numpy.ndarray) Noisy image
     """
-    noisy_image = image.copy().astype(np.float32)
+    # Convert image to grayscale if it's a color image
+    if len(image.shape) == 3:
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray_image = image
 
-    if noise_type == "poisson":
-        noisy_image = np.random.poisson(noisy_image)  # Poisson noise
-    elif noise_type == "gaussian":
-        noise = np.random.normal(0, 10, image.shape)  # Gaussian noise
-        noisy_image += noise
+    # Convert to float
+    gray_image_float = gray_image.astype(np.float32) / 255.0
 
-    return np.clip(noisy_image, 0, 255).astype(np.uint8)
+    # Add noise based on type
+    if noise_type.lower() == "gaussian":
+        # Generate Gaussian noise
+        gaussian_noise = np.random.normal(0, noise_factor, gray_image.shape).astype(
+            np.float32
+        )
+        noisy_image = gray_image_float + gaussian_noise
+
+    elif noise_type.lower() == "poisson":
+        # Generate Poisson noise
+        noisy_image = np.random.poisson(gray_image_float * (1 / noise_factor)) / (
+            1 / noise_factor
+        )
+
+    else:
+        raise ValueError("Noise type must be 'gaussian' or 'poisson'")
+
+    # Clip values to valid range and convert back to original image type
+    noisy_image = np.clip(noisy_image, 0, 1)
+    noisy_image = (noisy_image * 255).astype(np.uint8)
+
+    return noisy_image
 
 
 def adjust_contrast(image, factor=1.2):
@@ -49,24 +64,3 @@ def add_motion_blur(image, kernel_size=15, angle=0):
     )
     kernel /= kernel_size
     return cv2.filter2D(image, -1, kernel)
-
-
-def apply_highpass_filter(image):
-    """
-    Simulates high-pass filtering (removing low frequencies) to mimic X-ray filtering.
-    Higher kVp reduces beam hardening artifacts.
-    """
-    dft = np.fft.fft2(image)
-    dft_shift = np.fft.fftshift(dft)
-
-    rows, cols = image.shape
-    crow, ccol = rows // 2, cols // 2
-    mask = np.ones((rows, cols), np.uint8)
-    r = 30  # Radius of low frequencies to remove
-    mask[crow - r : crow + r, ccol - r : ccol + r] = 0  # Block low frequencies
-
-    dft_shift *= mask
-    dft = np.fft.ifftshift(dft_shift)
-    filtered_image = np.abs(np.fft.ifft2(dft))
-
-    return np.clip(filtered_image, 0, 255).astype(np.uint8)
