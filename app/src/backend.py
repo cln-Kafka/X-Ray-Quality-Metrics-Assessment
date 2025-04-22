@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 from ui import XRaySimulator_Ui
 import webbrowser
-from skimage import exposure
 from matplotlib.widgets import RectangleSelector
 import core.metrics_calculation as mc
 import core.simulation as sim
