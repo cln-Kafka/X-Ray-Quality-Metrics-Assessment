@@ -1,8 +1,12 @@
 # X-Ray Tube Simulation and Quality Metrics Assessment
 
-## Description
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyQt5](https://img.shields.io/badge/GUI-PyQt5-green.svg)](https://pypi.org/project/PyQt5/)
 
-## App Features
+<!-- <a href="README-Assets/ZaBoteru.png"><img src="README-Assets/ZaBoteru.png" alt="ZaBoteru"></a> -->
+
+## Description
 
 ## Quick Preview
 
@@ -39,3 +43,19 @@
     ```
 
 ## References
+
+## Contribution
+
+Our gratitude to our wonderful team ❤️
+
+<div align="center">
+
+| <a href="https://github.com/cln-Kafka"><img src="https://avatars.githubusercontent.com/u/100665578?v=4" width="100px" alt="@Kareem Noureddine"></a> | <a href="https://github.com/HabibaSroor"><img src="https://avatars.githubusercontent.com/u/93604097?v=4" width="100px" alt="@Habiba Salama Ahmed"></a> | <a href="https://github.com/LunaEyad"><img src="https://avatars.githubusercontent.com/u/103345380?v=4" width="100px" alt="@LunaEyad"></a> | <a href="https://github.com/mohamedmosilhy"><img src="https://avatars.githubusercontent.com/u/93820559?v=4" width="100px" alt="@mohamed mosilhy"></a> | <a href="https://github.com/mohamedmosilhy"><img src="https://avatars.githubusercontent.com/u/93820559?v=4" width="100px" alt="@mohamed mosilhy"></a> |
+| :-: | :-: | :-: | :-: | :-: |
+| [Kareem Noureddine](https://github.com/cln-Kafka) | [Habiba Sroor](https://github.com/joyou159) | [Luna Eyad](https://github.com/Nadaaomran) | [Mohamed Moselhi](https://github.com/nouran-19) | |
+
+</div>
+
+-----
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
