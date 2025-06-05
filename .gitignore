@@ -1,5 +1,5 @@
 # A virtual environment for quick testing
-x-ray-task-venv/
+trial_venv/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
