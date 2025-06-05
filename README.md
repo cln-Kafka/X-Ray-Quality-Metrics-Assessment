@@ -20,7 +20,11 @@ This project provides a comprehensive tool for simulating and analyzing X-ray tu
 
 ## Quick Preview
 
+<div align="center">
+  
 ![App UI](README-Assets/app-ui.png)
+
+</div>
 
 ## Features
 
